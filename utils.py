@@ -62,14 +62,8 @@ def l2_dist(x1: np.array, x2: np.array):
     dists = None
 
     # ====== YOUR CODE: ======
-    # calculate a^2 and modify it's dimensions to fit the target result matrix
-    modx1 = np.sum(np.power(x1, 2), 1, keepdims=True)
-    print(modx1.shape)
-    # calculate b^2 and modify it's dimensions to fit the target result matrix
-    modx2 = np.sum(np.power(x2, 2), 1, keepdims=True)
-    print(modx2.shape)
-    # calculate the dist between x1 and x2 using normal form
-    dists = np.sqrt(modx1 + modx2 - 2 * np.matmul(x1, x2.transpose()))
+    # TODO: this probably works but if anything goes wrong, check
+    dists = np.linalg.norm(x1[:, None, :] - x2[None, :, :], axis=-1)
     # ========================
 
     return dists
