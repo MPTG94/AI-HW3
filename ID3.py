@@ -127,13 +127,14 @@ class ID3:
         attributes_names, _, _ = load_data_set('ID3')
         attributes_names.remove(self.target_attribute)
         for attribute_index, attribute_name in enumerate(attributes_names):
-            # if attribute_name == self.target_attribute:
-            #     continue
             values_for_column = unique_vals(rows, attribute_index)
             values_for_column = list(values_for_column)
+            values_for_column.sort()
             for val1, val2 in zip(values_for_column[:-1], values_for_column[1:]):
                 avg_value = (val1 + val2) / 2
                 temp_question = Question(attribute_name, attribute_index, avg_value)
+            # for val in values_for_column:
+            #     temp_question = Question(attribute_name, attribute_index, val)
                 t_gain, t_true_rows, t_true_labels, t_false_rows, t_false_labels = self.partition(rows, labels,
                                                                                                   temp_question,
                                                                                                   current_uncertainty)
@@ -168,9 +169,15 @@ class ID3:
         # breaking conditions:
         # 1. If we're below the target for pruning
         # 2. If all samples in the current node are of the same class
-        if len(rows) < self.min_for_pruning:
+
+        # Should we always keep leafs with more than m samples?
+        if len(rows) <= self.min_for_pruning:
+            # print('reached pruning point')
+            # print('leaf classes: ', class_counts(rows, labels))
             return Leaf(rows, labels)
         if len(class_counts(rows, labels)) == 1:
+            # print('reached homogeneous leaf')
+            # print('leaf classes: ',class_counts(rows, labels))
             return Leaf(rows, labels)
         best_gain, best_question, best_true_rows, best_true_labels, best_false_rows, best_false_labels = self.find_best_split(
             rows, labels)
@@ -224,7 +231,7 @@ class ID3:
             max_label_count = -np.inf
             label_count_dict = node.predictions
             for label, label_count in label_count_dict.items():
-                if label_count > max_label_count:
+                if label_count >= max_label_count:
                     max_label_count = label_count
                     prediction = label
         # ========================

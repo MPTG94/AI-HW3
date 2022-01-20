@@ -1,4 +1,9 @@
+import math
 import subprocess
+from copy import deepcopy
+
+import numpy as np
+import sklearn
 
 from KNN import KNNClassifier
 from utils import *
@@ -29,10 +34,82 @@ def get_top_b_features(x, y, b=5, k=51):
     top_b_features_indices = []
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError
+    attributes_names, train_dataset, test_dataset = load_data_set('KNN')
+    x_train, y_train, x_test, y_test = get_dataset_split(train_set=train_dataset,
+                                                         test_set=test_dataset,
+                                                         target_attribute='Outcome')
+    max_acc = -np.inf
+    test_counter = 0
+    top_b_features_indices = []
+    prev_iteration_accuracies = []
+    while len(top_b_features_indices) < b:
+        considered_feature_index = -1
+        curr_feature_best_acc = -np.inf
+        for i in range(8):
+            if i in top_b_features_indices:
+                continue
+            test_counter += 1
+            temp_top_b_features = deepcopy(top_b_features_indices)
+            currently_tested_feature_index = i
+            temp_top_b_features.append(currently_tested_feature_index)
+            temp_top_b_features.sort()
+            x_train_new = x_train[:, temp_top_b_features]
+            y_train_new = y_train
+            current_acc = get_k_fold_accuracy_for_feature_set(x_train_new, y_train_new, k, temp_top_b_features)
+            prev_iteration_accuracies.append({i: current_acc})
+            if current_acc > curr_feature_best_acc:
+                curr_feature_best_acc = current_acc
+                considered_feature_index = i
+        if curr_feature_best_acc > max_acc:
+            max_acc = curr_feature_best_acc
+            top_b_features_indices.append(considered_feature_index)
+        else:
+            best_of_not_helping_acc = -np.inf
+            best_of_not_helping_index = -1
+            for acc in prev_iteration_accuracies:
+                for k, v in acc.items():
+                    if v > best_of_not_helping_acc and k not in top_b_features_indices:
+                        best_of_not_helping_acc = v
+                        best_of_not_helping_index = k
+            top_b_features_indices.append(best_of_not_helping_index)
+
+    print(top_b_features_indices)
+    print(f'We tested {test_counter} sub-groups, total number of sub groups is: {math.comb(8, b)}')
     # ========================
 
     return top_b_features_indices
+
+
+def find_best_b():
+    attributes_names, train_dataset, test_dataset = load_data_set('KNN')
+    x_train, y_train, x_test, y_test = get_dataset_split(train_set=train_dataset,
+                                                         test_set=test_dataset,
+                                                         target_attribute='Outcome')
+    best_k = 51
+    for b in range(1, 8):
+        print(f'best for b: {b}')
+        top_m = get_top_b_features(x_train, y_train, b=b, k=best_k)
+        x_train_new = x_train[:, top_m]
+        x_test_test = x_test[:, top_m]
+        exp_print(f'KNN in selected feature data: ')
+        run_knn(best_k, x_train_new, y_train, x_test_test, y_test)
+
+
+def get_k_fold_accuracy_for_feature_set(x_train, y_train, k=51, features_indices=None):
+    kf = sklearn.model_selection.KFold(n_splits=5, shuffle=True, random_state=ID)
+    accuracy_per_split = np.array([])
+    # Perform K-fold CV over only the training dataset
+    # Generate a split of data, train on the major split, then test on the smaller split
+    for train_indexes, test_indexes in kf.split(x_train):
+        neigh = KNNClassifier(k=k)
+        neigh.train(x_train[train_indexes], y_train[train_indexes])
+        y_pred = neigh.predict(x_train[test_indexes])
+        acc = accuracy(y_train[test_indexes], y_pred)
+        accuracy_per_split = np.append(accuracy_per_split, acc)
+    avg_acc = np.mean(accuracy_per_split)
+    # print(f'{avg_acc * 100:.2f}%, {features_indices}')
+
+    return avg_acc
 
 
 def run_cross_validation():
@@ -65,7 +142,7 @@ if __name__ == '__main__':
                                                          target_attribute='Outcome')
 
     best_k = 51
-    b = 0
+    b = 2
 
     # # ========================================================================
 
@@ -73,6 +150,7 @@ if __name__ == '__main__':
     exp_print('KNN in raw data: ')
     run_knn(best_k, x_train, y_train, x_test, y_test)
 
+    # find_best_b()
     top_m = get_top_b_features(x_train, y_train, b=b, k=best_k)
     x_train_new = x_train[:, top_m]
     x_test_test = x_test[:, top_m]
