@@ -90,7 +90,6 @@ class ID3:
         assert len(rows) == len(labels), 'Rows size should be equal to labels size.'
 
         # ====== YOUR CODE: ======
-        # print(rows[0])
         true_rows = []
         true_labels = []
         false_rows = []
@@ -127,14 +126,15 @@ class ID3:
         attributes_names, _, _ = load_data_set('ID3')
         attributes_names.remove(self.target_attribute)
         for attribute_index, attribute_name in enumerate(attributes_names):
+            # this gives us the results we want for k-fold, but it is not correct...
+            # if attribute_name in self.used_features:
+            #     continue
             values_for_column = unique_vals(rows, attribute_index)
             values_for_column = list(values_for_column)
             values_for_column.sort()
             for val1, val2 in zip(values_for_column[:-1], values_for_column[1:]):
                 avg_value = (val1 + val2) / 2
                 temp_question = Question(attribute_name, attribute_index, avg_value)
-            # for val in values_for_column:
-            #     temp_question = Question(attribute_name, attribute_index, val)
                 t_gain, t_true_rows, t_true_labels, t_false_rows, t_false_labels = self.partition(rows, labels,
                                                                                                   temp_question,
                                                                                                   current_uncertainty)
@@ -166,23 +166,18 @@ class ID3:
         true_branch, false_branch = None, None
 
         # ====== YOUR CODE: ======
-        # breaking conditions:
-        # 1. If we're below the target for pruning
-        # 2. If all samples in the current node are of the same class
-
-        # Should we always keep leafs with more than m samples?
-        if len(rows) <= self.min_for_pruning:
-            # print('reached pruning point')
-            # print('leaf classes: ', class_counts(rows, labels))
-            return Leaf(rows, labels)
-        if len(class_counts(rows, labels)) == 1:
-            # print('reached homogeneous leaf')
-            # print('leaf classes: ',class_counts(rows, labels))
-            return Leaf(rows, labels)
         best_gain, best_question, best_true_rows, best_true_labels, best_false_rows, best_false_labels = self.find_best_split(
             rows, labels)
-        true_branch = self.build_tree(best_true_rows, best_true_labels)
-        false_branch = self.build_tree(best_false_rows, best_false_labels)
+        if best_question is None:
+            return Leaf(rows, labels)
+        if len(best_true_rows) <= self.min_for_pruning or len(class_counts(best_true_rows, best_true_labels)) == 1:
+            true_branch = Leaf(best_true_rows, best_true_labels)
+        else:
+            true_branch = self.build_tree(best_true_rows, best_true_labels)
+        if len(best_false_rows) <= self.min_for_pruning or len(class_counts(best_false_rows, best_false_labels)) == 1:
+            false_branch = Leaf(best_false_rows, best_false_labels)
+        else:
+            false_branch = self.build_tree(best_false_rows, best_false_labels)
         self.used_features.add(best_question.column)
         # ========================
 

@@ -42,7 +42,15 @@ def find_best_pruning_m(train_dataset: np.array, m_choices, num_folds=5):
         #  or implement something else.
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError
+        curr_m_accuracy = []
+        kf = sklearn.model_selection.KFold(n_splits=num_folds, shuffle=True, random_state=ID)
+        for ds_train, ds_valid in create_train_validation_split(train_dataset, kf):
+            x_train, y_train, x_valid, y_valid = get_dataset_split(ds_train, ds_valid, target_attribute)
+            model.fit(x_train, y_train)
+            model_pred = model.predict(x_valid)
+            curr_acc = accuracy(model_pred, y_valid)
+            curr_m_accuracy.append(curr_acc)
+        accuracies.append(curr_m_accuracy)
         # ========================
 
     best_m_idx = np.argmax([np.mean(acc) for acc in accuracies])
@@ -100,27 +108,8 @@ def cross_validation_experiment(plot_graph=True):
         return None
 
     # ====== YOUR CODE: ======
-    x_train, y_train, _, _ = get_dataset_split(train_dataset, test_dataset, target_attribute)
-    labels = list(set(y_train))
-    kf = sklearn.model_selection.KFold(n_splits=num_folds, shuffle=True, random_state=ID)
-    for m in m_choices:
-        accuracy_per_split = np.array([])
-        id3 = ID3(labels, min_for_pruning=m)
-        # Perform K-fold CV over only the training dataset
-        # Generate a split of data, train on the major split, then test on the smaller split
-        for train_indexes, test_indexes in kf.split(x_train):
-            # for t_index in train_indexes:
-            #     for te_index in test_indexes:
-            #         if t_index == te_index:
-            #             print('SAME INDEX')
-            id3.fit(x_train[train_indexes], y_train[train_indexes])
-            y_pred = id3.predict(x_train[test_indexes])
-            acc = accuracy(y_train[test_indexes], y_pred)
-            accuracy_per_split = np.append(accuracy_per_split, acc)
-        # print(accuracy_per_split)
-        accuracies = np.append(accuracies, np.mean(accuracy_per_split))
-    best_m_index = np.argmax(accuracies)
-    best_m = m_choices[best_m_index]
+    _, train_dataset1, _ = load_data_set('ID3')
+    best_m, accuracies = find_best_pruning_m(train_dataset1, m_choices, num_folds)
     # ========================
     accuracies_mean = np.array([np.mean(acc) * 100 for acc in accuracies])
     if best_m is not None and plot_graph:
