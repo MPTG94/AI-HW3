@@ -73,6 +73,7 @@ def get_top_b_features(x, y, b=5, k=51):
                         best_of_not_helping_index = k
             top_b_features_indices.append(best_of_not_helping_index)
 
+    # TODO: remove print
     print(top_b_features_indices)
     print(f'We tested {test_counter} sub-groups, total number of sub groups is: {math.comb(8, b)}')
     # ========================
@@ -150,7 +151,6 @@ if __name__ == '__main__':
     exp_print('KNN in raw data: ')
     run_knn(best_k, x_train, y_train, x_test, y_test)
 
-    # find_best_b()
     top_m = get_top_b_features(x_train, y_train, b=b, k=best_k)
     x_train_new = x_train[:, top_m]
     x_test_test = x_test[:, top_m]

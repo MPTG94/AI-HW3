@@ -197,7 +197,8 @@ def best_m_test(x_train, y_train, x_test, y_test, min_for_pruning):
     id3.fit(x_train, y_train)
     y_pred = id3.predict(x_test)
     acc = utils.accuracy(y_test, y_pred)
-    # print(f'Test Accuracy: {acc * 100:.2f}%')
+    # TODO: remove print
+    print(f'Test Accuracy: {acc * 100:.2f}%')
     # ========================
 
     return acc
