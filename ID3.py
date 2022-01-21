@@ -134,6 +134,9 @@ class ID3:
             values_for_column.sort()
             for val1, val2 in zip(values_for_column[:-1], values_for_column[1:]):
                 avg_value = (val1 + val2) / 2
+                # attribute_tuple = (attribute_name, avg_value)
+                # if attribute_tuple in self.used_features:
+                #     continue
                 temp_question = Question(attribute_name, attribute_index, avg_value)
                 t_gain, t_true_rows, t_true_labels, t_false_rows, t_false_labels = self.partition(rows, labels,
                                                                                                   temp_question,
@@ -179,6 +182,7 @@ class ID3:
         else:
             false_branch = self.build_tree(best_false_rows, best_false_labels)
         self.used_features.add(best_question.column)
+        # self.used_features.add((best_question.column, best_question.value))
         # ========================
 
         return DecisionNode(best_question, true_branch, false_branch)
