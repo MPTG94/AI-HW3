@@ -150,7 +150,7 @@ if __name__ == '__main__':
     print("-" * 10 + f'k  = {best_k}' + "-" * 10)
     exp_print('KNN in raw data: ')
     run_knn(best_k, x_train, y_train, x_test, y_test)
-
+    # find_best_b()
     top_m = get_top_b_features(x_train, y_train, b=b, k=best_k)
     x_train_new = x_train[:, top_m]
     x_test_test = x_test[:, top_m]
