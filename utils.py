@@ -62,7 +62,6 @@ def l2_dist(x1: np.array, x2: np.array):
     dists = None
 
     # ====== YOUR CODE: ======
-    # TODO: this probably works but if anything goes wrong, check
     dists = np.linalg.norm(x1[:, None, :] - x2[None, :, :], axis=-1)
     # ========================
 

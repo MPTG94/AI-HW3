@@ -19,7 +19,7 @@ def run_knn(k, x_train, y_train, x_test, y_test, formatted_print=True):
     print(f'{acc * 100:.2f}%' if formatted_print else acc)
 
 
-def get_top_b_features(x, y, b=5, k=51):
+def get_top_b_features(x, y, b=5, k=51, final=False):
     """
     :param k: Number of nearest neighbors.
     :param x: array-like of shape (n_samples, n_features).
@@ -40,7 +40,6 @@ def get_top_b_features(x, y, b=5, k=51):
                                                          target_attribute='Outcome')
     max_acc = -np.inf
     test_counter = 0
-    top_b_features_indices = []
     prev_iteration_accuracies = []
     while len(top_b_features_indices) < b:
         considered_feature_index = -1
@@ -73,9 +72,13 @@ def get_top_b_features(x, y, b=5, k=51):
                         best_of_not_helping_index = k
             top_b_features_indices.append(best_of_not_helping_index)
 
-    # TODO: remove print
-    print(top_b_features_indices)
-    print(f'We tested {test_counter} sub-groups, total number of sub groups is: {math.comb(8, b)}')
+    if final:
+        print('===================================================================')
+        print(f'The FINAL best b value is: {len(top_b_features_indices)}')
+        print(f'the FINAL best feature indices are: {top_b_features_indices}')
+        print('===================================================================')
+    else:
+        print(f'the best feature indices are: {top_b_features_indices}')
     # ========================
 
     return top_b_features_indices
@@ -89,9 +92,9 @@ def find_best_b():
     best_k = 51
     for b in range(1, 8):
         print(f'best for b: {b}')
-        top_m = get_top_b_features(x_train, y_train, b=b, k=best_k)
-        x_train_new = x_train[:, top_m]
-        x_test_test = x_test[:, top_m]
+        top_b = get_top_b_features(x_train, y_train, b=b, k=best_k, final=False)
+        x_train_new = x_train[:, top_b]
+        x_test_test = x_test[:, top_b]
         exp_print(f'KNN in selected feature data: ')
         run_knn(best_k, x_train_new, y_train, x_test_test, y_test)
 
@@ -108,7 +111,6 @@ def get_k_fold_accuracy_for_feature_set(x_train, y_train, k=51, features_indices
         acc = accuracy(y_train[test_indexes], y_pred)
         accuracy_per_split = np.append(accuracy_per_split, acc)
     avg_acc = np.mean(accuracy_per_split)
-    # print(f'{avg_acc * 100:.2f}%, {features_indices}')
 
     return avg_acc
 
@@ -150,8 +152,8 @@ if __name__ == '__main__':
     print("-" * 10 + f'k  = {best_k}' + "-" * 10)
     exp_print('KNN in raw data: ')
     run_knn(best_k, x_train, y_train, x_test, y_test)
-    # find_best_b()
-    top_m = get_top_b_features(x_train, y_train, b=b, k=best_k)
+    find_best_b()
+    top_m = get_top_b_features(x_train, y_train, b=b, k=best_k, final=True)
     x_train_new = x_train[:, top_m]
     x_test_test = x_test[:, top_m]
     exp_print(f'KNN in selected feature data: ')
